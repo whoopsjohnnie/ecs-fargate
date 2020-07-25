@@ -1,0 +1,96 @@
+
+
+
+---
+ECS Blue/Green
+
+
+
+Step 1: Create an Application Load Balancer
+
+> aws elbv2 describe-load-balancers --profile=PROFILE --region=REGION --output=json
+> aws elbv2 create-load-balancer --name bg-alb1 --subnets subnet-ID24 subnet-ID4 --security-groups sg-ID25 --profile=PROFILE --region=REGION --output=json
+
+
+> aws elbv2 describe-target-groups --profile=PROFILE --region=REGION --output=json
+> aws elbv2 create-target-group --name bg-lb1t1 --protocol HTTP --port 80 --target-type ip --vpc-id vpc-afeb6ec6 --profile=PROFILE --region=REGION --output=json
+
+
+> aws elbv2 create-listener --load-balancer-arn arn:aws:elasticloadbalancing:REGION:ACCOUNT:loadbalancer/app/bg-alb1/ID14 --protocol HTTP --port 80 --default-actions Type=forward,TargetGroupArn=arn:aws:elasticloadbalancing:REGION:ACCOUNT:targetgroup/bg-lb1t1/ID19 --profile=PROFILE --region=REGION --output=json
+
+
+
+Step 2: Create an Amazon ECS Cluster
+
+> aws ecs list-clusters --profile=PROFILE --region=REGION --output=json
+> aws ecs create-cluster --cluster-name bg-cluster1 --profile=PROFILE --region=REGION --output=json
+
+
+Step 3: Register a Task Definition
+
+> aws ecs list-task-definitions --profile=PROFILE --region=REGION --output=json
+> aws ecs register-task-definition --cli-input-json file://./fargate-taskdef.json --profile=PROFILE --region=REGION --output=json
+
+
+Step 4: Create an Amazon ECS Service
+
+> aws ecs list-services --cluster bg-cluster1 --profile=PROFILE --region=REGION --output=json
+> aws ecs create-service --cli-input-json file://./fargate-servicedef.json --profile=PROFILE --region=REGION --output=json
+
+
+Step 5: Create the AWS CodeDeploy Resources
+
+> aws deploy create-application --application-name bg-application1 --compute-platform ECS --profile=PROFILE --region=REGION --output=json
+
+
+> aws elbv2 describe-target-groups --profile=PROFILE --region=REGION --output=json
+> aws elbv2 create-target-group --name bg-lb1t2 --protocol HTTP --port 80 --target-type ip --vpc-id vpc-afeb6ec6 --profile=PROFILE --region=REGION --output=json
+
+
+> aws elbv2 describe-listeners --load-balancer-arn arn:aws:elasticloadbalancing:REGION:ACCOUNT:loadbalancer/app/bg-alb1/ID14
+...
+"ListenerArn": "arn:aws:elasticloadbalancing:REGION:ACCOUNT:listener/app/bg-alb1/ID14/ID15"
+...
+
+> aws deploy create-deployment-group --cli-input-json file://./fargate-depgroupdef.json --profile=PROFILE --region=REGION --output=json
+{
+    "deploymentGroupId": "ID18"
+}
+
+
+Step 5: Create and Monitor an CodeDeploy Deployment
+
+
+> aws s3 mb s3://fargate-app --profile=PROFILE --region=REGION --output=json
+> aws s3 cp ./fargate-appspec.yaml s3://fargate-app/fargate-appspec.yaml --profile=PROFILE --region=REGION --output=json
+> aws deploy create-deployment --cli-input-json file://./fargate-deployment.json --profile=PROFILE --region=REGION --output=json
+{
+    "deploymentId": "ID23"
+}
+
+> aws deploy list-deployments --profile=PROFILE --region=REGION --output=json
+> aws deploy get-deployment --deployment-id ID23 --profile=PROFILE --region=REGION --output=json
+> aws deploy list-deployment-targets --deployment-id ID23 --profile=PROFILE --region=REGION --output=json
+> aws deploy get-deployment-target --deployment-id "ID23" --target-id bg-cluster1:fargate-service --profile=PROFILE --region=REGION --output=json
+
+
+
+Step 6: Clean Up
+
+- aws deploy delete-deployment-group --application-name tutorial-bluegreen --deployment-group-name tutorial-bluegreen-dg --region REGION
+
+- aws deploy delete-application --application-name tutorial-bluegreen --region REGION
+
+- aws ecs delete-service --service arn:aws:ecs:region:aws_account_id:service/service-bluegreen --force --region REGION
+
+- aws ecs delete-cluster --cluster tutorial-bluegreen --region REGION
+
+- ( aws s3 rm s3://tutorial-bluegreen/appspec.yaml ) 
+
+- ( aws s3 rb s3://tutorial-bluegreen )
+
+- aws elbv2 delete-load-balancer --load-balancer-arn arn:aws:elasticloadbalancing:region:aws_account_id:loadbalancer/app/bluegreen-alb/ID12 --region REGION
+
+- aws elbv2 delete-target-group --target-group-arn arn:aws:elasticloadbalancing:region:aws_account_id:targetgroup/bluegreentarget1/ID10 --region REGION
+
+- aws elbv2 delete-target-group --target-group-arn arn:aws:elasticloadbalancing:region:aws_account_id:targetgroup/bluegreentarget2/ID11 --region REGION

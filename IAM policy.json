@@ -1,0 +1,76 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "VisualEditor0",
+            "Effect": "Allow",
+            "Action": [
+                "s3:PutObject",
+                "s3:GetObject",
+                "logs:CreateLogStream",
+                "s3:GetBucketAcl",
+                "s3:GetBucketLocation",
+                "logs:PutLogEvents",
+                "s3:GetObjectVersion"
+            ],
+            "Resource": [
+                "arn:aws:s3:::codepipeline-REGION-*",
+                "arn:aws:logs:REGION:ACCOUNT:log-group:/aws/codebuild/testproject",
+                "arn:aws:logs:REGION:ACCOUNT:log-group:/aws/codebuild/testproject:*"
+            ]
+        },
+        {
+            "Sid": "VisualEditor1",
+            "Effect": "Allow",
+            "Action": [
+                "s3:PutObject",
+                "s3:GetBucketAcl",
+                "s3:GetBucketLocation"
+            ],
+            "Resource": [
+                "arn:aws:s3:::velerotest",
+                "arn:aws:s3:::velerotest/*"
+            ]
+        },
+        {
+            "Sid": "VisualEditor2",
+            "Effect": "Allow",
+            "Action": [
+                "ecr:PutLifecyclePolicy",
+                "ecr:PutImageTagMutability",
+                "ecr:DescribeImageScanFindings",
+                "ecr:StartImageScan",
+                "ecr:GetLifecyclePolicyPreview",
+                "ecr:CreateRepository",
+                "ecr:GetDownloadUrlForLayer",
+                "ecr:PutImageScanningConfiguration",
+                "ecr:GetAuthorizationToken",
+                "ecr:ListTagsForResource",
+                "ecr:UploadLayerPart",
+                "ecr:ListImages",
+                "ecr:PutImage",
+                "ecr:UntagResource",
+                "ecr:BatchGetImage",
+                "ecr:CompleteLayerUpload",
+                "ecr:DescribeImages",
+                "ecr:TagResource",
+                "ecr:DescribeRepositories",
+                "ecr:StartLifecyclePolicyPreview",
+                "ecr:InitiateLayerUpload",
+                "ecr:BatchCheckLayerAvailability",
+                "ecr:GetRepositoryPolicy",
+                "ecr:GetLifecyclePolicy"
+            ],
+            "Resource": "*"
+        },
+        {
+            "Sid": "VisualEditor3",
+            "Effect": "Allow",
+            "Action": "logs:CreateLogGroup",
+            "Resource": [
+                "arn:aws:logs:REGION:ACCOUNT:log-group:/aws/codebuild/testproject",
+                "arn:aws:logs:REGION:ACCOUNT:log-group:/aws/codebuild/testproject:*"
+            ]
+        }
+    ]
+}

@@ -1,0 +1,119 @@
+
+
+
+---
+CodeBuild/CodeDeploy
+
+
+
+> aws codebuild list-projects --profile=PROFILE --region=REGION --output=json
+{
+    "projects": [
+        "testproject"
+    ]
+}
+
+
+
+> aws codebuild batch-get-projects --names=testproject --profile=PROFILE --region=REGION --output=json
+{
+    "projectsNotFound": [], 
+    "projects": [
+        {
+            "name": "testproject", 
+            "serviceRole": "arn:aws:iam::ACCOUNT:role/service-role/codebuild-testproject-service-role", 
+            "tags": [], 
+            "artifacts": {
+                "type": "NO_ARTIFACTS"
+            }, 
+            "lastModified": 1574455951.154, 
+            "timeoutInMinutes": 60, 
+            "created": 1574449276.713, 
+            "environment": {
+                "computeType": "BUILD_GENERAL1_SMALL", 
+                "privilegedMode": true, 
+                "image": "aws/codebuild/amazonlinux2-x86_64-standard:1.0", 
+                "type": "LINUX_CONTAINER", 
+                "environmentVariables": []
+            }, 
+            "source": {
+                "buildspec": "version: 0.2\n\nphases:\n  install:\n    runtime-versions:\n      docker: 18\n  pre_build:\n    commands:\n      - echo Logging in to Amazon ECR...\n      - aws --version\n      - $(aws ecr get-login --region REGION --no-include-email)\n      - BASE_REPOSITORY_URI=ACCOUNT.dkr.ecr.REGION.amazonaws.com/build-base\n      - MAIN_REPOSITORY_URI=ACCOUNT.dkr.ecr.REGION.amazonaws.com/build-main\n      - BASE_IMAGE_TAG=mytag\n      - MAIN_IMAGE_TAG=mytag\n  build:\n    commands:\n      - echo Build started on $(date)\n      - echo Building the Docker image...\n      - cd ./deploy/docker/base/\n      - docker build -t base2 -t $BASE_REPOSITORY_URI:latest -t $BASE_REPOSITORY_URI:$BASE_IMAGE_TAG --file Dockerfile .\n      - cd ../../../\n      - docker build -t main -t $MAIN_REPOSITORY_URI:latest -t $MAIN_REPOSITORY_URI:$MAIN_IMAGE_TAG --file Dockerfile --build-arg SERVER=\"daphne\" --build-arg SETTINGS=\"production\" --build-arg HOST=\"0.0.0.0\" --build-arg PORT=8000 --build-arg WORKERS=6 .\n  post_build:\n    commands:\n      - echo Build completed on $(date)\n      - echo Pushing the Docker images...\n      - cd ./deploy/docker/base/\n      - docker push $BASE_REPOSITORY_URI:latest\n      - docker push $BASE_REPOSITORY_URI:$BASE_IMAGE_TAG\n      - cd ../../../\n      - docker push $MAIN_REPOSITORY_URI:latest\n      - docker push $MAIN_REPOSITORY_URI:$MAIN_IMAGE_TAG\n", 
+                "type": "GITHUB", 
+                "location": "GITURL"
+            }, 
+            "encryptionKey": "arn:aws:kms:REGION:ACCOUNT:alias/aws/s3", 
+            "arn": "arn:aws:codebuild:REGION:ACCOUNT:project/testproject", 
+            "description": "testproject"
+        }
+    ]
+}
+
+
+
+> aws codebuild list-builds --profile=PROFILE --region=REGION --output=json
+{
+    "ids": [
+        "testproject:ID21", 
+        "testproject:ID22"
+    ]
+}
+
+
+
+> aws codebuild start-build --project-name=testproject --profile=PROFILE --region=REGION --output=json
+{
+    "build": {
+        "environment": {
+            "computeType": "BUILD_GENERAL1_SMALL", 
+            "privilegedMode": true, 
+            "image": "aws/codebuild/amazonlinux2-x86_64-standard:1.0", 
+            "type": "LINUX_CONTAINER", 
+            "environmentVariables": []
+        }, 
+        "phases": [
+            {
+                "phaseStatus": "SUCCEEDED", 
+                "endTime": 1574462578.73, 
+                "phaseType": "SUBMITTED", 
+                "durationInSeconds": 0, 
+                "startTime": 1574462578.579
+            }, 
+            {
+                "phaseType": "QUEUED", 
+                "startTime": 1574462578.73
+            }
+        ], 
+        "buildComplete": false, 
+        "logs": {}, 
+        "artifacts": {
+            "location": ""
+        }, 
+        "projectName": "testproject", 
+        "timeoutInMinutes": 60, 
+        "initiator": "USER", 
+        "buildStatus": "IN_PROGRESS", 
+        "sourceVersion": "GITBRANCH", 
+        "source": {
+            "buildspec": "version: 0.2\n\nphases:\n  install:\n    runtime-versions:\n      docker: 18\n  pre_build:\n    commands:\n      - echo Logging in to Amazon ECR...\n      - aws --version\n      - $(aws ecr get-login --region REGION --no-include-email)\n      - BASE_REPOSITORY_URI=ACCOUNT.dkr.ecr.REGION.amazonaws.com/build-base\n      - MAIN_REPOSITORY_URI=ACCOUNT.dkr.ecr.REGION.amazonaws.com/build-main\n      - BASE_IMAGE_TAG=mytag\n      - MAIN_IMAGE_TAG=mytag\n  build:\n    commands:\n      - echo Build started on $(date)\n      - echo Building the Docker image...\n      - cd ./deploy/docker/base/\n      - docker build -t base2 -t $BASE_REPOSITORY_URI:latest -t $BASE_REPOSITORY_URI:$BASE_IMAGE_TAG --file Dockerfile .\n      - cd ../../../\n      - docker build -t main -t $MAIN_REPOSITORY_URI:latest -t $MAIN_REPOSITORY_URI:$MAIN_IMAGE_TAG --file Dockerfile --build-arg SERVER=\"daphne\" --build-arg SETTINGS=\"production\" --build-arg HOST=\"0.0.0.0\" --build-arg PORT=8000 --build-arg WORKERS=6 .\n  post_build:\n    commands:\n      - echo Build completed on $(date)\n      - echo Pushing the Docker images...\n      - cd ./deploy/docker/base/\n      - docker push $BASE_REPOSITORY_URI:latest\n      - docker push $BASE_REPOSITORY_URI:$BASE_IMAGE_TAG\n      - cd ../../../\n      - docker push $MAIN_REPOSITORY_URI:latest\n      - docker push $MAIN_REPOSITORY_URI:$MAIN_IMAGE_TAG\n", 
+            "type": "GITHUB", 
+            "location": "GITURL"
+        }, 
+        "currentPhase": "QUEUED", 
+        "startTime": 1574462578.579, 
+        "id": "testproject:3969e266-f902-4534-bda1-fb0462c7272f", 
+        "arn": "arn:aws:codebuild:REGION:ACCOUNT:build/testproject:3969e266-f902-4534-bda1-fb0462c7272f"
+    }
+}
+
+
+
+> aws codebuild list-builds --profile=PROFILE --region=REGION --output=json
+{
+    "ids": [
+        "testproject:3969e266-f902-4534-bda1-fb0462c7272f", 
+        "testproject:ID21", 
+        "testproject:ID22"
+    ]
+}
+
+

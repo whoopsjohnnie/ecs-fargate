@@ -1,0 +1,19 @@
+
+# url - https://aws.amazon.com/blogs/security/a-safer-way-to-distribute-aws-credentials-to-ec2/
+# 
+# Finding hard-coded credentials in your code
+# Hopefully you’re excited about deploying credentials to EC2 that are automatically rotated.
+# Now that you’re using Roles, a good security practice would be to go through your code and remove any references to AKID/Secret.
+# We suggest running the following regular expressions against your code base:
+# 
+# Search for access key IDs: (?<![A-Z0-9])[A-Z0-9]{20}(?![A-Z0-9]).
+# In English, this regular expression says: Find me 20-character, uppercase, alphanumeric strings that don’t have any uppercase, alphanumeric characters immediately before or after.
+# Search for secret access keys: (?<![A-Za-z0-9/+=])[A-Za-z0-9/+=]{40}(?![A-Za-z0-9/+=]).
+# In English, this regular expression says: Find me 40-character, base-64 strings that don’t have any base 64 characters immediately before or after.
+# If grep is your preferred tool, run a recursive, Perl-compatible search using the following commands:
+
+# grep -RP '(?<![A-Z0-9])[A-Z0-9]{20}(?![A-Z0-9])' *
+# grep -RP '(?<![A-Za-z0-9/+=])[A-Za-z0-9/+=]{40}(?![A-Za-z0-9/+=])' *
+
+grep -E '[A-Z0-9]{20}' *
+grep -E '[A-Za-z0-9/+=]{40}' *

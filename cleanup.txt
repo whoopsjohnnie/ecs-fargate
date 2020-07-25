@@ -1,0 +1,60 @@
+
+
+
+---
+CLEAN UP
+
+
+
+> aws ecs list-clusters --profile=PROFILE --region=REGION --output=json
+
+
+> aws ecs list-services --cluster fargate-cluster --profile=PROFILE --region=REGION --output=json
+
+> aws ecs delete-service --cluster fargate-cluster --service arn:aws:ecs:REGION:ACCOUNT:service/fargate-service --force --profile=PROFILE --region=REGION --output=json
+
+> aws ecs delete-cluster --cluster fargate-cluster --profile=PROFILE --region=REGION --output=json
+
+
+> aws ecs list-services --cluster fargate --profile=PROFILE --region=REGION --output=json
+
+> aws ecs delete-service --cluster fargate --service arn:aws:ecs:REGION:ACCOUNT:service/fargatetes2 --force --profile=PROFILE --region=REGION --output=json
+
+> aws ecs delete-cluster --cluster fargate --profile=PROFILE --region=REGION --output=json
+
+
+
+
+> aws elbv2 describe-load-balancers --profile=PROFILE --region=REGION --output=json
+
+> aws elbv2 delete-load-balancer --load-balancer-arn arn:aws:elasticloadbalancing:REGION:ACCOUNT:loadbalancer/app/lb5/ID2 --profile=PROFILE --region=REGION --output=json
+
+> aws elbv2 delete-load-balancer --load-balancer-arn arn:aws:elasticloadbalancing:REGION:ACCOUNT:loadbalancer/app/lb4/ID9 --profile=PROFILE --region=REGION --output=json
+
+
+
+
+> aws elbv2 describe-target-groups --profile=PROFILE --region=REGION --output=json
+
+> aws elbv2 delete-target-group --target-group-arn arn:aws:elasticloadbalancing:REGION:ACCOUNT:targetgroup/tg-far-fargatetest-1/ID7 --profile=PROFILE --region=REGION --output=json
+
+> aws elbv2 delete-target-group --target-group-arn arn:aws:elasticloadbalancing:REGION:ACCOUNT:targetgroup/tg-far-fargatetest-2/ID8 --profile=PROFILE --region=REGION --output=json
+
+arn:aws:elasticloadbalancing:REGION:ACCOUNT:targetgroup/lb5-targets/ID1
+arn:aws:elasticloadbalancing:REGION:ACCOUNT:targetgroup/lb5-targets1/ID6
+arn:aws:elasticloadbalancing:REGION:ACCOUNT:targetgroup/lb5-targets2/ID5
+
+> aws elbv2 delete-target-group --target-group-arn arn:aws:elasticloadbalancing:REGION:ACCOUNT:targetgroup/lb5-targets/ID1 --profile=PROFILE --region=REGION --output=json
+
+> aws elbv2 delete-target-group --target-group-arn arn:aws:elasticloadbalancing:REGION:ACCOUNT:targetgroup/lb5-targets1/ID6 --profile=PROFILE --region=REGION --output=json
+
+> aws elbv2 delete-target-group --target-group-arn arn:aws:elasticloadbalancing:REGION:ACCOUNT:targetgroup/lb5-targets2/ID5 --profile=PROFILE --region=REGION --output=json
+
+
+
+
+> aws ecs list-task-definitions --profile=PROFILE --region=REGION --output=json
+> aws ecs deregister-task-definition --task-definition arn:aws:ecs:REGION:ACCOUNT:task-definition/fargate:2
+> aws ecs deregister-task-definition --task-definition arn:aws:ecs:REGION:ACCOUNT:task-definition/fargate:1
+
+

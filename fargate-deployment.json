@@ -1,0 +1,12 @@
+{
+    "applicationName": "bg-application1",
+    "deploymentGroupName": "fargate-depgroup",
+    "revision": {
+        "revisionType": "S3",
+        "s3Location": {
+            "bucket": "fargate-app",
+            "key": "fargate-appspec.yaml",
+            "bundleType": "YAML"
+        }
+    }
+}

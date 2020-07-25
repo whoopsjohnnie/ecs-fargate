@@ -1,0 +1,25 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      docker: 18
+  pre_build:
+    commands:
+      - echo Logging in to Amazon ECR...
+      - aws --version
+      - $(aws ecr get-login --region REGION --no-include-email)
+      - REPOSITORY_URI=ACCOUNT.dkr.ecr.REGION.amazonaws.com/build-base
+      - IMAGE_TAG=mytag
+  build:
+    commands:
+      - echo Build started on $(date)
+      - echo Building the Docker image...
+      - cd ./deploy/docker/base/
+      - docker build -t $REPOSITORY_URI:latest -t $REPOSITORY_URI:$IMAGE_TAG --file Dockerfile .
+  post_build:
+    commands:
+      - echo Build completed on $(date)
+      - echo Pushing the Docker images...
+      - docker push $REPOSITORY_URI:latest
+      - docker push $REPOSITORY_URI:$IMAGE_TAG

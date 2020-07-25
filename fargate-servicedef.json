@@ -1,0 +1,26 @@
+{
+    "cluster": "bg-cluster1",
+    "serviceName": "fargate-service",
+    "taskDefinition": "fargate",
+    "loadBalancers": [
+        {
+            "targetGroupArn": "arn:aws:elasticloadbalancing:REGION:ACCOUNT:targetgroup/bg-lb1t1/ID19",
+            "containerName": "fargate-app",
+            "containerPort": 80
+        }
+    ],
+    "launchType": "FARGATE",
+    "schedulingStrategy": "REPLICA",
+    "deploymentController": {
+        "type": "CODE_DEPLOY"
+    },
+    "platformVersion": "LATEST",
+    "networkConfiguration": {
+       "awsvpcConfiguration": {
+          "assignPublicIp": "ENABLED",
+          "securityGroups": [ "sg-ID25" ],
+          "subnets": [ "subnet-ID24", "subnet-ID4" ]
+       }
+    },
+    "desiredCount": 1
+}

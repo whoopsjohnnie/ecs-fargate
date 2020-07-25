@@ -1,0 +1,641 @@
+
+
+
+# https://docs.aws.amazon.com/cli/latest/reference/codebuild/index.html
+# https://docs.aws.amazon.com/elasticloadbalancing/latest/application/tutorial-application-load-balancer-cli.html
+# https://docs.aws.amazon.com/AmazonECS/latest/developerguide/ECS_AWSCLI_Fargate.html
+# https://docs.aws.amazon.com/AmazonECS/latest/developerguide/create-blue-green.html
+
+
+> ls ~/Library/Python/2.7/bin/
+> pip list
+...
+awscli                   1.16.290 
+...
+
+> pip install awscli --upgrade --user
+> aws --version
+aws-cli/1.16.290 Python/2.7.15 Darwin/17.7.0 botocore/1.13.26
+
+
+---
+CodeBuild/CodeDeploy
+
+
+
+> aws codebuild list-projects --profile=PROFILE --region=REGION --output=json
+{
+    "projects": [
+        "testproject"
+    ]
+}
+
+
+
+> aws codebuild batch-get-projects --names=testproject --profile=PROFILE --region=REGION --output=json
+{
+    "projectsNotFound": [], 
+    "projects": [
+        {
+            "name": "testproject", 
+            "serviceRole": "arn:aws:iam::ACCOUNT:role/service-role/codebuild-testproject-service-role", 
+            "tags": [], 
+            "artifacts": {
+                "type": "NO_ARTIFACTS"
+            }, 
+            "lastModified": 1574455951.154, 
+            "timeoutInMinutes": 60, 
+            "created": 1574449276.713, 
+            "environment": {
+                "computeType": "BUILD_GENERAL1_SMALL", 
+                "privilegedMode": true, 
+                "image": "aws/codebuild/amazonlinux2-x86_64-standard:1.0", 
+                "type": "LINUX_CONTAINER", 
+                "environmentVariables": []
+            }, 
+            "source": {
+                "buildspec": "version: 0.2\n\nphases:\n  install:\n    runtime-versions:\n      docker: 18\n  pre_build:\n    commands:\n      - echo Logging in to Amazon ECR...\n      - aws --version\n      - $(aws ecr get-login --region REGION --no-include-email)\n      - BASE_REPOSITORY_URI=ACCOUNT.dkr.ecr.REGION.amazonaws.com/build-base\n      - MAIN_REPOSITORY_URI=ACCOUNT.dkr.ecr.REGION.amazonaws.com/build-main\n      - BASE_IMAGE_TAG=mytag\n      - MAIN_IMAGE_TAG=mytag\n  build:\n    commands:\n      - echo Build started on $(date)\n      - echo Building the Docker image...\n      - cd ./deploy/docker/base/\n      - docker build -t base2 -t $BASE_REPOSITORY_URI:latest -t $BASE_REPOSITORY_URI:$BASE_IMAGE_TAG --file Dockerfile .\n      - cd ../../../\n      - docker build -t main -t $MAIN_REPOSITORY_URI:latest -t $MAIN_REPOSITORY_URI:$MAIN_IMAGE_TAG --file Dockerfile --build-arg SERVER=\"daphne\" --build-arg SETTINGS=\"production\" --build-arg HOST=\"0.0.0.0\" --build-arg PORT=8000 --build-arg WORKERS=6 .\n  post_build:\n    commands:\n      - echo Build completed on $(date)\n      - echo Pushing the Docker images...\n      - cd ./deploy/docker/base/\n      - docker push $BASE_REPOSITORY_URI:latest\n      - docker push $BASE_REPOSITORY_URI:$BASE_IMAGE_TAG\n      - cd ../../../\n      - docker push $MAIN_REPOSITORY_URI:latest\n      - docker push $MAIN_REPOSITORY_URI:$MAIN_IMAGE_TAG\n", 
+                "type": "GITHUB", 
+                "location": "GITURL"
+            }, 
+            "encryptionKey": "arn:aws:kms:REGION:ACCOUNT:alias/aws/s3", 
+            "arn": "arn:aws:codebuild:REGION:ACCOUNT:project/testproject", 
+            "description": "testproject"
+        }
+    ]
+}
+
+
+
+> aws codebuild list-builds --profile=PROFILE --region=REGION --output=json
+{
+    "ids": [
+        "testproject:ID21", 
+        "testproject:ID22"
+    ]
+}
+
+
+
+> aws codebuild start-build --project-name=testproject --profile=PROFILE --region=REGION --output=json
+{
+    "build": {
+        "environment": {
+            "computeType": "BUILD_GENERAL1_SMALL", 
+            "privilegedMode": true, 
+            "image": "aws/codebuild/amazonlinux2-x86_64-standard:1.0", 
+            "type": "LINUX_CONTAINER", 
+            "environmentVariables": []
+        }, 
+        "phases": [
+            {
+                "phaseStatus": "SUCCEEDED", 
+                "endTime": 1574462578.73, 
+                "phaseType": "SUBMITTED", 
+                "durationInSeconds": 0, 
+                "startTime": 1574462578.579
+            }, 
+            {
+                "phaseType": "QUEUED", 
+                "startTime": 1574462578.73
+            }
+        ], 
+        "buildComplete": false, 
+        "logs": {}, 
+        "artifacts": {
+            "location": ""
+        }, 
+        "projectName": "testproject", 
+        "timeoutInMinutes": 60, 
+        "initiator": "USER", 
+        "buildStatus": "IN_PROGRESS", 
+        "sourceVersion": "GITBRANCH", 
+        "source": {
+            "buildspec": "version: 0.2\n\nphases:\n  install:\n    runtime-versions:\n      docker: 18\n  pre_build:\n    commands:\n      - echo Logging in to Amazon ECR...\n      - aws --version\n      - $(aws ecr get-login --region REGION --no-include-email)\n      - BASE_REPOSITORY_URI=ACCOUNT.dkr.ecr.REGION.amazonaws.com/build-base\n      - MAIN_REPOSITORY_URI=ACCOUNT.dkr.ecr.REGION.amazonaws.com/build-main\n      - BASE_IMAGE_TAG=mytag\n      - MAIN_IMAGE_TAG=mytag\n  build:\n    commands:\n      - echo Build started on $(date)\n      - echo Building the Docker image...\n      - cd ./deploy/docker/base/\n      - docker build -t base2 -t $BASE_REPOSITORY_URI:latest -t $BASE_REPOSITORY_URI:$BASE_IMAGE_TAG --file Dockerfile .\n      - cd ../../../\n      - docker build -t main -t $MAIN_REPOSITORY_URI:latest -t $MAIN_REPOSITORY_URI:$MAIN_IMAGE_TAG --file Dockerfile --build-arg SERVER=\"daphne\" --build-arg SETTINGS=\"production\" --build-arg HOST=\"0.0.0.0\" --build-arg PORT=8000 --build-arg WORKERS=6 .\n  post_build:\n    commands:\n      - echo Build completed on $(date)\n      - echo Pushing the Docker images...\n      - cd ./deploy/docker/base/\n      - docker push $BASE_REPOSITORY_URI:latest\n      - docker push $BASE_REPOSITORY_URI:$BASE_IMAGE_TAG\n      - cd ../../../\n      - docker push $MAIN_REPOSITORY_URI:latest\n      - docker push $MAIN_REPOSITORY_URI:$MAIN_IMAGE_TAG\n", 
+            "type": "GITHUB", 
+            "location": "GITURL"
+        }, 
+        "currentPhase": "QUEUED", 
+        "startTime": 1574462578.579, 
+        "id": "testproject:3969e266-f902-4534-bda1-fb0462c7272f", 
+        "arn": "arn:aws:codebuild:REGION:ACCOUNT:build/testproject:3969e266-f902-4534-bda1-fb0462c7272f"
+    }
+}
+
+
+
+> aws codebuild list-builds --profile=PROFILE --region=REGION --output=json
+{
+    "ids": [
+        "testproject:3969e266-f902-4534-bda1-fb0462c7272f", 
+        "testproject:ID21", 
+        "testproject:ID22"
+    ]
+}
+
+
+
+---
+Load Balancer
+
+
+
+> aws elbv2 create-load-balancer --name lb5 --subnets subnet-ID24 subnet-ID4 --security-groups sg-ID25 --profile=PROFILE --region=REGION --output=json
+{
+    "LoadBalancers": [
+        {
+            "IpAddressType": "ipv4", 
+            "VpcId": "vpc-afeb6ec6", 
+            "LoadBalancerArn": "arn:aws:elasticloadbalancing:REGION:ACCOUNT:loadbalancer/app/lb5/ID2", 
+            "State": {
+                "Code": "provisioning"
+            }, 
+            "DNSName": "lb5-1753250934.REGION.elb.amazonaws.com", 
+            "SecurityGroups": [
+                "sg-ID25"
+            ], 
+            "LoadBalancerName": "lb5", 
+            "CreatedTime": "2019-11-23T01:15:44.680Z", 
+            "Scheme": "internet-facing", 
+            "Type": "application", 
+            "CanonicalHostedZoneId": "ID20", 
+            "AvailabilityZones": [
+                {
+                    "SubnetId": "subnet-ID24", 
+                    "ZoneName": "REGIONb"
+                }, 
+                {
+                    "SubnetId": "subnet-ID4", 
+                    "ZoneName": "REGIONa"
+                }
+            ]
+        }
+    ]
+}
+
+
+
+
+> aws elbv2 create-target-group --name lb5-targets --protocol HTTP --port 80 --vpc-id vpc-afeb6ec6 --profile=PROFILE --region=REGION --output=json
+{
+    "TargetGroups": [
+        {
+            "HealthCheckPath": "/", 
+            "HealthCheckIntervalSeconds": 30, 
+            "VpcId": "vpc-afeb6ec6", 
+            "Protocol": "HTTP", 
+            "HealthCheckTimeoutSeconds": 5, 
+            "HealthCheckProtocol": "HTTP", 
+            "UnhealthyThresholdCount": 2, 
+            "HealthyThresholdCount": 5, 
+            "TargetGroupArn": "arn:aws:elasticloadbalancing:REGION:ACCOUNT:targetgroup/lb5-targets/ID1", 
+            "Matcher": {
+                "HttpCode": "200"
+            }, 
+            "HealthCheckPort": "traffic-port", 
+            "Port": 80, 
+            "TargetGroupName": "lb5-targets"
+        }
+    ]
+}
+
+
+
+> aws elbv2 register-targets --target-group-arn targetgroup-arn --targets Id=i-... Id=i-... --profile=PROFILE --region=REGION --output=json
+
+
+
+> aws elbv2 create-listener --load-balancer-arn arn:aws:elasticloadbalancing:REGION:ACCOUNT:loadbalancer/app/lb5/ID2 --protocol HTTP --port 80 --default-actions Type=forward,TargetGroupArn=arn:aws:elasticloadbalancing:REGION:ACCOUNT:targetgroup/lb5-targets/ID1 --profile=PROFILE --region=REGION --output=json
+{
+    "Listeners": [
+        {
+            "Protocol": "HTTP", 
+            "DefaultActions": [
+                {
+                    "TargetGroupArn": "arn:aws:elasticloadbalancing:REGION:ACCOUNT:targetgroup/lb5-targets/ID1", 
+                    "Type": "forward"
+                }
+            ], 
+            "LoadBalancerArn": "arn:aws:elasticloadbalancing:REGION:ACCOUNT:loadbalancer/app/lb5/ID2", 
+            "Port": 80, 
+            "ListenerArn": "arn:aws:elasticloadbalancing:REGION:ACCOUNT:listener/app/lb5/ID2/ID3"
+        }
+    ]
+}
+
+
+
+---
+ECS
+
+
+
+> aws ecs create-cluster --cluster-name fargate-cluster --profile=PROFILE --region=REGION --output=json
+
+
+
+> aws ecs list-clusters --profile=PROFILE --region=REGION --output=json
+{
+    "clusterArns": [
+        "arn:aws:ecs:REGION:ACCOUNT:cluster/production", 
+        "arn:aws:ecs:REGION:ACCOUNT:cluster/staging", 
+        "arn:aws:ecs:REGION:ACCOUNT:cluster/fargate", 
+        "arn:aws:ecs:REGION:ACCOUNT:cluster/fargate-cluster"
+    ]
+}
+
+
+
+> aws ecs register-task-definition --cli-input-json file://./sample-fargate-taskdef.json --profile=PROFILE --region=REGION --output=json
+
+> aws ecs register-task-definition --cli-input-json file://~/Desktop/ECS\ Fargate/sample-fargate-taskdef.json --profile=PROFILE --region=REGION --output=json
+{
+    "taskDefinition": {
+        "status": "ACTIVE", 
+        "networkMode": "awsvpc", 
+        "family": "sample-fargate", 
+        "placementConstraints": [], 
+        "requiresAttributes": [
+            {
+                "name": "com.amazonaws.ecs.capability.docker-remote-api.1.18"
+            }, 
+            {
+                "name": "ecs.capability.task-eni"
+            }
+        ], 
+        "cpu": "256", 
+        "compatibilities": [
+            "EC2", 
+            "FARGATE"
+        ], 
+        "volumes": [], 
+        "memory": "512", 
+        "requiresCompatibilities": [
+            "FARGATE"
+        ], 
+        "taskDefinitionArn": "arn:aws:ecs:REGION:ACCOUNT:task-definition/sample-fargate:1", 
+        "containerDefinitions": [
+            {
+                "environment": [], 
+                "name": "fargate-app", 
+                "mountPoints": [], 
+                "image": "httpd:2.4", 
+                "cpu": 0, 
+                "portMappings": [
+                    {
+                        "protocol": "tcp", 
+                        "containerPort": 80, 
+                        "hostPort": 80
+                    }
+                ], 
+                "entryPoint": [
+                    "sh", 
+                    "-c"
+                ], 
+                "command": [
+                    "/bin/sh -c \"echo '<html> <head> <title>Amazon ECS Sample App</title> <style>body {margin-top: 40px; background-color: #333;} </style> </head><body> <div style=color:white;text-align:center> <h1>Amazon ECS Sample App</h1> <h2>Congratulations!</h2> <p>Your application is now running on a container in Amazon ECS.</p> </div></body></html>' >  /usr/local/apache2/htdocs/index.html && httpd-foreground\""
+                ], 
+                "essential": true, 
+                "volumesFrom": []
+            }
+        ], 
+        "revision": 1
+    }
+}
+
+
+
+> aws ecs list-task-definitions --profile=PROFILE --region=REGION --output=json
+{
+    "taskDefinitionArns": [
+        "arn:aws:ecs:REGION:ACCOUNT:task-definition/fargate:1", 
+        "arn:aws:ecs:REGION:ACCOUNT:task-definition/fargate:2", 
+        "arn:aws:ecs:REGION:ACCOUNT:task-definition/production-latest:4", 
+        "arn:aws:ecs:REGION:ACCOUNT:task-definition/staging2-latest:5", 
+        "arn:aws:ecs:REGION:ACCOUNT:task-definition/sample-fargate:1"
+    ]
+}
+
+
+subnet-ID24, subnet-ID4
+sg-ID16
+
+> aws ecs create-service --cluster fargate-cluster --service-name fargate-service --task-definition sample-fargate:1 --desired-count 2 --launch-type "FARGATE" --network-configuration "awsvpcConfiguration={subnets=[subnet-ID24, subnet-ID4],securityGroups=[sg-ID16]}" --profile=PROFILE --region=REGION --output=json
+
+> aws ecs create-service --cluster fargate-cluster --service-name fargate-service --task-definition sample-fargate:1 --desired-count 2 --launch-type "FARGATE" --network-configuration "awsvpcConfiguration={subnets=[subnet-ID24, subnet-ID4],securityGroups=[sg-ID16]}" --profile=PROFILE --region=REGION --output=json
+{
+    "service": {
+        "networkConfiguration": {
+            "awsvpcConfiguration": {
+                "subnets": [
+                    "subnet-ID24", 
+                    "subnet-ID4"
+                ], 
+                "securityGroups": [
+                    "sg-ID16"
+                ], 
+                "assignPublicIp": "DISABLED"
+            }
+        }, 
+        "launchType": "FARGATE", 
+        "enableECSManagedTags": false, 
+        "loadBalancers": [], 
+        "desiredCount": 2, 
+        "clusterArn": "arn:aws:ecs:REGION:ACCOUNT:cluster/fargate-cluster", 
+        "serviceArn": "arn:aws:ecs:REGION:ACCOUNT:service/fargate-service", 
+        "deploymentConfiguration": {
+            "maximumPercent": 200, 
+            "minimumHealthyPercent": 100
+        }, 
+        "createdAt": 1574632619.508, 
+        "schedulingStrategy": "REPLICA", 
+        "placementConstraints": [], 
+        "deployments": [
+            {
+                "status": "PRIMARY", 
+                "networkConfiguration": {
+                    "awsvpcConfiguration": {
+                        "subnets": [
+                            "subnet-ID24", 
+                            "subnet-ID4"
+                        ], 
+                        "securityGroups": [
+                            "sg-ID16"
+                        ], 
+                        "assignPublicIp": "DISABLED"
+                    }
+                }, 
+                "pendingCount": 0, 
+                "launchType": "FARGATE", 
+                "createdAt": 1574632619.508, 
+                "desiredCount": 2, 
+                "taskDefinition": "arn:aws:ecs:REGION:ACCOUNT:task-definition/sample-fargate:1", 
+                "updatedAt": 1574632619.508, 
+                "platformVersion": "1.3.0", 
+                "id": "ecs-svc/ID17", 
+                "runningCount": 0
+            }
+        ], 
+        "serviceName": "fargate-service", 
+        "events": [], 
+        "runningCount": 0, 
+        "status": "ACTIVE", 
+        "serviceRegistries": [], 
+        "pendingCount": 0, 
+        "platformVersion": "LATEST", 
+        "placementStrategy": [], 
+        "propagateTags": "NONE", 
+        "roleArn": "arn:aws:iam::ACCOUNT:role/aws-service-role/ecs.amazonaws.com/AWSServiceRoleForECS", 
+        "taskDefinition": "arn:aws:ecs:REGION:ACCOUNT:task-definition/sample-fargate:1"
+    }
+}
+
+
+
+> aws ecs list-services --cluster fargate-cluster --profile=PROFILE --region=REGION --output=json
+{
+    "serviceArns": [
+        "arn:aws:ecs:REGION:ACCOUNT:service/fargate-service"
+    ]
+}
+
+
+
+> aws ecs describe-services --cluster fargate-cluster --services fargate-service --profile=PROFILE --region=REGION --output=json
+{
+    "services": [
+        {
+            "networkConfiguration": {
+                "awsvpcConfiguration": {
+                    "subnets": [
+                        "subnet-ID24", 
+                        "subnet-ID4"
+                    ], 
+                    "securityGroups": [
+                        "sg-ID16"
+                    ], 
+                    "assignPublicIp": "DISABLED"
+                }
+            }, 
+            "launchType": "FARGATE", 
+            "enableECSManagedTags": false, 
+            "loadBalancers": [], 
+            "desiredCount": 2, 
+            "clusterArn": "arn:aws:ecs:REGION:ACCOUNT:cluster/fargate-cluster", 
+            "serviceArn": "arn:aws:ecs:REGION:ACCOUNT:service/fargate-service", 
+            "deploymentConfiguration": {
+                "maximumPercent": 200, 
+                "minimumHealthyPercent": 100
+            }, 
+            "createdAt": 1574632619.508, 
+            "schedulingStrategy": "REPLICA", 
+            "placementConstraints": [], 
+            "deployments": [
+                {
+                    "status": "PRIMARY", 
+                    "networkConfiguration": {
+                        "awsvpcConfiguration": {
+                            "subnets": [
+                                "subnet-ID24", 
+                                "subnet-ID4"
+                            ], 
+                            "securityGroups": [
+                                "sg-ID16"
+                            ], 
+                            "assignPublicIp": "DISABLED"
+                        }
+                    }, 
+                    "pendingCount": 2, 
+                    "launchType": "FARGATE", 
+                    "createdAt": 1574632619.508, 
+                    "desiredCount": 2, 
+                    "taskDefinition": "arn:aws:ecs:REGION:ACCOUNT:task-definition/sample-fargate:1", 
+                    "updatedAt": 1574632619.508, 
+                    "platformVersion": "1.3.0", 
+                    "id": "ecs-svc/ID17", 
+                    "runningCount": 0
+                }
+            ], 
+            "serviceName": "fargate-service", 
+            "events": [
+                {
+                    "message": "(service fargate-service) has started 2 tasks: (task 8b4e4158-647b-4d66-9e01-55b9db75d81a) (task 76738669-27ac-4e8e-bb83-2018f1fdf0dc).", 
+                    "id": "35453ad0-df25-4390-93d7-8e6b46c8533e", 
+                    "createdAt": 1574632758.043
+                }, 
+                {
+                    "message": "(service fargate-service) has started 2 tasks: (task f9d6c3e4-266e-4bfb-9aee-61368337527d) (task 429ebf97-e323-42e1-8e39-2a7bc08239fa).", 
+                    "id": "5f99f174-6f3e-443b-b170-455068679926", 
+                    "createdAt": 1574632625.616
+                }
+            ], 
+            "runningCount": 0, 
+            "status": "ACTIVE", 
+            "serviceRegistries": [], 
+            "pendingCount": 2, 
+            "platformVersion": "LATEST", 
+            "placementStrategy": [], 
+            "propagateTags": "NONE", 
+            "roleArn": "arn:aws:iam::ACCOUNT:role/aws-service-role/ecs.amazonaws.com/AWSServiceRoleForECS", 
+            "taskDefinition": "arn:aws:ecs:REGION:ACCOUNT:task-definition/sample-fargate:1"
+        }
+    ], 
+    "failures": []
+}
+
+
+
+---
+ECS Blue/Green
+
+
+
+Step 1: Create an Application Load Balancer
+
+> aws elbv2 describe-load-balancers --profile=PROFILE --region=REGION --output=json
+> aws elbv2 create-load-balancer --name bg-alb1 --subnets subnet-ID24 subnet-ID4 --security-groups sg-ID25 --profile=PROFILE --region=REGION --output=json
+
+
+> aws elbv2 describe-target-groups --profile=PROFILE --region=REGION --output=json
+> aws elbv2 create-target-group --name bg-lb1t1 --protocol HTTP --port 80 --target-type ip --vpc-id vpc-afeb6ec6 --profile=PROFILE --region=REGION --output=json
+
+
+> aws elbv2 create-listener --load-balancer-arn arn:aws:elasticloadbalancing:REGION:ACCOUNT:loadbalancer/app/bg-alb1/ID14 --protocol HTTP --port 80 --default-actions Type=forward,TargetGroupArn=arn:aws:elasticloadbalancing:REGION:ACCOUNT:targetgroup/bg-lb1t1/ID19 --profile=PROFILE --region=REGION --output=json
+
+
+
+Step 2: Create an Amazon ECS Cluster
+
+> aws ecs list-clusters --profile=PROFILE --region=REGION --output=json
+> aws ecs create-cluster --cluster-name bg-cluster1 --profile=PROFILE --region=REGION --output=json
+
+
+Step 3: Register a Task Definition
+
+> aws ecs list-task-definitions --profile=PROFILE --region=REGION --output=json
+> aws ecs register-task-definition --cli-input-json file://./fargate-taskdef.json --profile=PROFILE --region=REGION --output=json
+
+
+Step 4: Create an Amazon ECS Service
+
+> aws ecs list-services --cluster bg-cluster1 --profile=PROFILE --region=REGION --output=json
+> aws ecs create-service --cli-input-json file://./fargate-servicedef.json --profile=PROFILE --region=REGION --output=json
+
+
+Step 5: Create the AWS CodeDeploy Resources
+
+> aws deploy create-application --application-name bg-application1 --compute-platform ECS --profile=PROFILE --region=REGION --output=json
+
+
+> aws elbv2 describe-target-groups --profile=PROFILE --region=REGION --output=json
+> aws elbv2 create-target-group --name bg-lb1t2 --protocol HTTP --port 80 --target-type ip --vpc-id vpc-afeb6ec6 --profile=PROFILE --region=REGION --output=json
+
+
+> aws elbv2 describe-listeners --load-balancer-arn arn:aws:elasticloadbalancing:REGION:ACCOUNT:loadbalancer/app/bg-alb1/ID14
+...
+"ListenerArn": "arn:aws:elasticloadbalancing:REGION:ACCOUNT:listener/app/bg-alb1/ID14/ID15"
+...
+
+> aws deploy create-deployment-group --cli-input-json file://./fargate-depgroupdef.json --profile=PROFILE --region=REGION --output=json
+{
+    "deploymentGroupId": "ID18"
+}
+
+
+Step 5: Create and Monitor an CodeDeploy Deployment
+
+
+> aws s3 mb s3://fargate-app --profile=PROFILE --region=REGION --output=json
+> aws s3 cp ./fargate-appspec.yaml s3://fargate-app/fargate-appspec.yaml --profile=PROFILE --region=REGION --output=json
+> aws deploy create-deployment --cli-input-json file://./fargate-deployment.json --profile=PROFILE --region=REGION --output=json
+{
+    "deploymentId": "ID23"
+}
+
+> aws deploy list-deployments --profile=PROFILE --region=REGION --output=json
+> aws deploy get-deployment --deployment-id ID23 --profile=PROFILE --region=REGION --output=json
+> aws deploy list-deployment-targets --deployment-id ID23 --profile=PROFILE --region=REGION --output=json
+> aws deploy get-deployment-target --deployment-id "ID23" --target-id bg-cluster1:fargate-service --profile=PROFILE --region=REGION --output=json
+
+
+
+Step 6: Clean Up
+
+- aws deploy delete-deployment-group --application-name tutorial-bluegreen --deployment-group-name tutorial-bluegreen-dg --region REGION
+
+- aws deploy delete-application --application-name tutorial-bluegreen --region REGION
+
+- aws ecs delete-service --service arn:aws:ecs:region:aws_account_id:service/service-bluegreen --force --region REGION
+
+- aws ecs delete-cluster --cluster tutorial-bluegreen --region REGION
+
+- ( aws s3 rm s3://tutorial-bluegreen/appspec.yaml ) 
+
+- ( aws s3 rb s3://tutorial-bluegreen )
+
+- aws elbv2 delete-load-balancer --load-balancer-arn arn:aws:elasticloadbalancing:region:aws_account_id:loadbalancer/app/bluegreen-alb/ID12 --region REGION
+
+- aws elbv2 delete-target-group --target-group-arn arn:aws:elasticloadbalancing:region:aws_account_id:targetgroup/bluegreentarget1/ID10 --region REGION
+
+- aws elbv2 delete-target-group --target-group-arn arn:aws:elasticloadbalancing:region:aws_account_id:targetgroup/bluegreentarget2/ID11 --region REGION
+
+
+
+
+
+---
+CLEAN UP
+
+
+> aws ecs list-clusters --profile=PROFILE --region=REGION --output=json
+
+
+> aws ecs list-services --cluster fargate-cluster --profile=PROFILE --region=REGION --output=json
+
+> aws ecs delete-service --cluster fargate-cluster --service arn:aws:ecs:REGION:ACCOUNT:service/fargate-service --force --profile=PROFILE --region=REGION --output=json
+
+> aws ecs delete-cluster --cluster fargate-cluster --profile=PROFILE --region=REGION --output=json
+
+
+> aws ecs list-services --cluster fargate --profile=PROFILE --region=REGION --output=json
+
+> aws ecs delete-service --cluster fargate --service arn:aws:ecs:REGION:ACCOUNT:service/fargatetes2 --force --profile=PROFILE --region=REGION --output=json
+
+> aws ecs delete-cluster --cluster fargate --profile=PROFILE --region=REGION --output=json
+
+
+
+
+> aws elbv2 describe-load-balancers --profile=PROFILE --region=REGION --output=json
+
+> aws elbv2 delete-load-balancer --load-balancer-arn arn:aws:elasticloadbalancing:REGION:ACCOUNT:loadbalancer/app/lb5/ID2 --profile=PROFILE --region=REGION --output=json
+
+> aws elbv2 delete-load-balancer --load-balancer-arn arn:aws:elasticloadbalancing:REGION:ACCOUNT:loadbalancer/app/lb4/ID9 --profile=PROFILE --region=REGION --output=json
+
+
+
+
+> aws elbv2 describe-target-groups --profile=PROFILE --region=REGION --output=json
+
+> aws elbv2 delete-target-group --target-group-arn arn:aws:elasticloadbalancing:REGION:ACCOUNT:targetgroup/tg-far-fargatetest-1/ID7 --profile=PROFILE --region=REGION --output=json
+
+> aws elbv2 delete-target-group --target-group-arn arn:aws:elasticloadbalancing:REGION:ACCOUNT:targetgroup/tg-far-fargatetest-2/ID8 --profile=PROFILE --region=REGION --output=json
+
+arn:aws:elasticloadbalancing:REGION:ACCOUNT:targetgroup/lb5-targets/ID1
+arn:aws:elasticloadbalancing:REGION:ACCOUNT:targetgroup/lb5-targets1/ID6
+arn:aws:elasticloadbalancing:REGION:ACCOUNT:targetgroup/lb5-targets2/ID5
+
+> aws elbv2 delete-target-group --target-group-arn arn:aws:elasticloadbalancing:REGION:ACCOUNT:targetgroup/lb5-targets/ID1 --profile=PROFILE --region=REGION --output=json
+
+> aws elbv2 delete-target-group --target-group-arn arn:aws:elasticloadbalancing:REGION:ACCOUNT:targetgroup/lb5-targets1/ID6 --profile=PROFILE --region=REGION --output=json
+
+> aws elbv2 delete-target-group --target-group-arn arn:aws:elasticloadbalancing:REGION:ACCOUNT:targetgroup/lb5-targets2/ID5 --profile=PROFILE --region=REGION --output=json
+
+
+
+
+> aws ecs list-task-definitions --profile=PROFILE --region=REGION --output=json
+> aws ecs deregister-task-definition --task-definition arn:aws:ecs:REGION:ACCOUNT:task-definition/fargate:2
+> aws ecs deregister-task-definition --task-definition arn:aws:ecs:REGION:ACCOUNT:task-definition/fargate:1
+
+

@@ -1,0 +1,33 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      docker: 18
+  pre_build:
+    commands:
+      - echo Logging in to Amazon ECR...
+      - aws --version
+      - $(aws ecr get-login --region REGION --no-include-email)
+      - BASE_REPOSITORY_URI=ACCOUNT.dkr.ecr.REGION.amazonaws.com/build-base
+      - MAIN_REPOSITORY_URI=ACCOUNT.dkr.ecr.REGION.amazonaws.com/build-main
+      - BASE_IMAGE_TAG=mytag
+      - MAIN_IMAGE_TAG=mytag
+  build:
+    commands:
+      - echo Build started on $(date)
+      - echo Building the Docker image...
+      - cd ./deploy/docker/base/
+      - docker build -t base2 -t $BASE_REPOSITORY_URI:latest -t $BASE_REPOSITORY_URI:$BASE_IMAGE_TAG --file Dockerfile .
+      - cd ../../../
+      - docker build -t main -t $MAIN_REPOSITORY_URI:latest -t $MAIN_REPOSITORY_URI:$MAIN_IMAGE_TAG --file Dockerfile --build-arg SERVER="daphne" --build-arg SETTINGS="production" --build-arg HOST="0.0.0.0" --build-arg PORT=8000 --build-arg WORKERS=6 .
+  post_build:
+    commands:
+      - echo Build completed on $(date)
+      - echo Pushing the Docker images...
+      - cd ./deploy/docker/base/
+      - docker push $BASE_REPOSITORY_URI:latest
+      - docker push $BASE_REPOSITORY_URI:$BASE_IMAGE_TAG
+      - cd ../../../
+      - docker push $MAIN_REPOSITORY_URI:latest
+      - docker push $MAIN_REPOSITORY_URI:$MAIN_IMAGE_TAG

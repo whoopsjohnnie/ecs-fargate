@@ -1,0 +1,90 @@
+
+
+
+---
+Load Balancer
+
+
+
+> aws elbv2 create-load-balancer --name lb5 --subnets subnet-ID24 subnet-ID4 --security-groups sg-ID25 --profile=PROFILE --region=REGION --output=json
+{
+    "LoadBalancers": [
+        {
+            "IpAddressType": "ipv4", 
+            "VpcId": "vpc-afeb6ec6", 
+            "LoadBalancerArn": "arn:aws:elasticloadbalancing:REGION:ACCOUNT:loadbalancer/app/lb5/ID2", 
+            "State": {
+                "Code": "provisioning"
+            }, 
+            "DNSName": "lb5-1753250934.REGION.elb.amazonaws.com", 
+            "SecurityGroups": [
+                "sg-ID25"
+            ], 
+            "LoadBalancerName": "lb5", 
+            "CreatedTime": "2019-11-23T01:15:44.680Z", 
+            "Scheme": "internet-facing", 
+            "Type": "application", 
+            "CanonicalHostedZoneId": "ID20", 
+            "AvailabilityZones": [
+                {
+                    "SubnetId": "subnet-ID24", 
+                    "ZoneName": "REGIONb"
+                }, 
+                {
+                    "SubnetId": "subnet-ID4", 
+                    "ZoneName": "REGIONa"
+                }
+            ]
+        }
+    ]
+}
+
+
+
+
+> aws elbv2 create-target-group --name lb5-targets --protocol HTTP --port 80 --vpc-id vpc-afeb6ec6 --profile=PROFILE --region=REGION --output=json
+{
+    "TargetGroups": [
+        {
+            "HealthCheckPath": "/", 
+            "HealthCheckIntervalSeconds": 30, 
+            "VpcId": "vpc-afeb6ec6", 
+            "Protocol": "HTTP", 
+            "HealthCheckTimeoutSeconds": 5, 
+            "HealthCheckProtocol": "HTTP", 
+            "UnhealthyThresholdCount": 2, 
+            "HealthyThresholdCount": 5, 
+            "TargetGroupArn": "arn:aws:elasticloadbalancing:REGION:ACCOUNT:targetgroup/lb5-targets/ID1", 
+            "Matcher": {
+                "HttpCode": "200"
+            }, 
+            "HealthCheckPort": "traffic-port", 
+            "Port": 80, 
+            "TargetGroupName": "lb5-targets"
+        }
+    ]
+}
+
+
+
+> aws elbv2 register-targets --target-group-arn targetgroup-arn --targets Id=i-... Id=i-... --profile=PROFILE --region=REGION --output=json
+
+
+
+> aws elbv2 create-listener --load-balancer-arn arn:aws:elasticloadbalancing:REGION:ACCOUNT:loadbalancer/app/lb5/ID2 --protocol HTTP --port 80 --default-actions Type=forward,TargetGroupArn=arn:aws:elasticloadbalancing:REGION:ACCOUNT:targetgroup/lb5-targets/ID1 --profile=PROFILE --region=REGION --output=json
+{
+    "Listeners": [
+        {
+            "Protocol": "HTTP", 
+            "DefaultActions": [
+                {
+                    "TargetGroupArn": "arn:aws:elasticloadbalancing:REGION:ACCOUNT:targetgroup/lb5-targets/ID1", 
+                    "Type": "forward"
+                }
+            ], 
+            "LoadBalancerArn": "arn:aws:elasticloadbalancing:REGION:ACCOUNT:loadbalancer/app/lb5/ID2", 
+            "Port": 80, 
+            "ListenerArn": "arn:aws:elasticloadbalancing:REGION:ACCOUNT:listener/app/lb5/ID2/ID3"
+        }
+    ]
+}

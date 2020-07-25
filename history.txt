@@ -1,0 +1,103 @@
+  386  aws
+  387  aws help
+  388  aws help
+  389  aws help
+  390  aws codebuild 
+  391  aws codebuild help
+  392  aws codebuild help list-builds
+  393  aws codebuild help list-build
+  394  aws codebuild list-build
+  395  aws codebuild list-builds
+  396  aws codebuild list-builds
+  397  aws profile
+  398  aws help
+  399  aws 
+  400  aws --profile help
+  401  ls ~/.aws/
+  402  ls ~/.aws/credentials 
+  403  cat ~/.aws/credentials 
+  404  cat ~/.aws/credentials 
+  405  aws codebuild list-builds --profile=default
+  406  aws codebuild list-builds --profile=personal
+  407  aws codebuild list-builds --profile=personal --region=REGION
+  408  aws codebuild list-builds --profile=default --region=REGION
+  409  aws codebuild list-builds --profile=customaws --region=REGION
+  410  cd ~/Documents/development/mf/mf/
+  411  ls
+  412  cat aws-ecr-login.sh 
+  413  cat ~/.aws/credentials 
+  414  cat ~/.aws/credentials 
+  415  aws codebuild list-builds --profile=default --region=REGION
+  416  aws codebuild list-builds --profile=default --region=REGION
+  417  nano ~/.aws/credentials 
+  418  aws codebuild list-builds --profile=default --region=REGION
+  419  aws codebuild list-builds --profile=PROFILE --region=REGION
+  420  aws codebuild list-builds --profile=PROFILE --region=REGION
+  421  aws codebuild list-builds --profile=personal --region=REGION
+  422  aws codebuild list-builds --profile=PROFILE --region=REGION
+  423  aws codebuild list-builds --profile=PROFILE --region=REGION
+  424  aws codebuild list-builds --profile=default --region=REGION
+  425  aws codebuild list-builds --profile=PROFILE --region=REGION
+  426  aws codebuild list-builds --profile=default --region=REGION
+  427  cat ~/.aws/credentials 
+  428  aws codebuild list-builds --profile=PROFILE --region=REGION
+  429  aws codebuild list-builds --profile=PROFILE --region=REGION
+  430  aws codebuild list-builds --profile=default --region=REGION
+  431  aws codebuild list-builds --profile=PROFILE --region=REGION
+  432  aws codebuild list-builds --profile=PROFILE --region=REGION -o json
+  433  aws help
+  434  aws help
+  435  aws codebuild list-builds --profile=PROFILE --region=REGION --output=json
+  436  aws codebuild list-builds --profile=PROFILE --region=REGION --output=json
+  437  aws codebuild list-builds --profile=PROFILE --region=REGION --output=json
+  438  aws codebuild list-builds --profile=PROFILE --region=REGION --output=json
+  439  aws codebuild start-build --project-name=testproject --profile=PROFILE --region=REGION --output=json
+  440  aws codebuild list-builds --profile=PROFILE --region=REGION --output=json
+  441  aws codebuild list-builds --profile=PROFILE --region=REGION --output=json
+  442  aws codebuild start-build --project-name=testproject --profile=PROFILE --region=REGION --output=json
+  443  aws codebuild list-builds --profile=PROFILE --region=REGION --output=json
+  444  aws codebuild list-projects --profile=PROFILE --region=REGION --output=json
+  445  aws codebuild help
+  446  aws codebuild batch-get-projects --names=testproject --profile=PROFILE --region=REGION --output=json
+  447  aws codebuild batch-get-projects --names=testproject --profile=PROFILE --region=REGION --output=json
+  448  nano ~/.aws/credentials 
+  449  aws elb create-load-balancer --load-balancer-name lb5 --listeners "Protocol=HTTP,LoadBalancerPort=80,InstanceProtocol=HTTP,InstancePort=80" --subnets vpc-afeb6ec6 --security-groups sg-ID25 --profile=PROFILE --region=REGION --output=json
+  450  aws elbv2 help
+  451  aws elbv2 create-load-balancer --name lb5 --subnets subnet-ID24 subnet-ID4 --security-groups sg-ID25
+  452  aws elbv2 create-target-group --name lb5-targets --protocol HTTP --port 80 --vpc-id vpc-afeb6ec6 --profile=PROFILE --region=REGION --output=json
+  453  aws elbv2 create-listener --load-balancer-arn arn:aws:elasticloadbalancing:REGION:ACCOUNT:loadbalancer/app/lb5/ID2 --protocol HTTP --port 80 --default-actions Type=forward,TargetGroupArn=arn:aws:elasticloadbalancing:REGION:ACCOUNT:targetgroup/lb5-targets/ID1 --profile=PROFILE --region=REGION --output=json
+  454  aws ecs list-cluster --profile=PROFILE --region=REGION --output=json
+  455  aws ecs list-clusters --profile=PROFILE --region=REGION --output=json
+  456  aws ecs create-cluster --cluster-name fargate-cluster --profile=PROFILE --region=REGION --output=json
+  457  aws ecs list-clusters --profile=PROFILE --region=REGION --output=json
+  458  aws ecs register-task-definition --cli-input-json file:./sample-fargate-taskdef.json --profile=PROFILE --region=REGION --output=json
+  459  aws ecs register-task-definition --cli-input-json file:~/Desktop/ECS\ Fargate/sample-fargate-taskdef.json --profile=PROFILE --region=REGION --output=json
+  460  cat ~/Desktop/ECS\ Fargate/sample-fargate-taskdef.json
+  461  aws ecs register-task-definition --cli-input-json file://~/Desktop/ECS\ Fargate/sample-fargate-taskdef.json --profile=PROFILE --region=REGION --output=json
+  462  whereis aws
+  463  which aws
+  464  aws
+  465  aws --version
+  466  python --version
+  467  ls ~/bin/
+  468  which aws
+  469  whereis aws
+  470  aws
+  471  echo $PATH
+  472  ls ~/Library/Python/2.7/bin/
+  473  pip
+  474  pip listg
+  475  pip list
+  476  pip3
+  477  pip install awscli --upgrade --user
+  478  aws
+  479  aws --version
+  480  ls ~/Library/Python/2.7/bin/
+  481  pip list
+  482  aws --version
+  483  aws ecs register-task-definition --cli-input-json file://~/Desktop/ECS\ Fargate/sample-fargate-taskdef.json --profile=PROFILE --region=REGION --output=json
+  484  aws ecs list-task-definitions --profile=PROFILE --region=REGION --output=json
+  485  aws ecs create-service --cluster fargate-cluster --service-name fargate-service --task-definition sample-fargate:1 --desired-count 2 --launch-type "FARGATE" --network-configuration "awsvpcConfiguration={subnets=[subnet-ID24, subnet-ID4],securityGroups=[sg-ID16]}"
+  486  aws ecs list-services --cluster fargate-cluster --profile=PROFILE --region=REGION --output=json
+  487  aws ecs describe-services --cluster fargate-cluster --services fargate-service --profile=PROFILE --region=REGION --output=json
+  488  aws ecs describe-services --cluster fargate-cluster --services fargate-service --profile=PROFILE --region=REGION --output=json
